@@ -1,0 +1,12 @@
+receivables:
+  - id: sample-client-invoice
+    name: Sample client invoice
+    description: Consulting services
+    customer_label: Sample Client
+    amount: 500.00
+    currency: USD
+    due_date: 2026-10-15
+    status: open
+    connector: stripe
+    requires_approval: true
+    collect_before_due: false

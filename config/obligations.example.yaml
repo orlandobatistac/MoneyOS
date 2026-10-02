@@ -1,0 +1,8 @@
+obligations:
+  - id: sample-utility
+    name: Sample utility bill
+    amount: 125.00
+    due_date: 2026-10-15
+    priority: 10
+    autopay: false
+    payment_connector: manual

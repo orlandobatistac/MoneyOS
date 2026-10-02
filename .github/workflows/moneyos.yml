@@ -1,0 +1,78 @@
+name: MoneyOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      incoming:
+        description: "Optional new cash amount to route"
+        required: false
+        default: "0"
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+  actions: write
+
+jobs:
+  run:
+    if: github.event_name == 'workflow_dispatch' || github.event.issue.title == '[MoneyOS] Run'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Require private repository
+        if: github.event.repository.private != true
+        run: |
+          echo "::error::MoneyOS refuses to process financial data in a public repository. Make the repository private first."
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - name: Test
+        run: pytest -q
+
+      - name: Build local policy files
+        run: |
+          cp config/policy.example.yaml config/policy.yaml
+          cp config/obligations.example.yaml config/obligations.yaml
+
+      - name: Run MoneyOS
+        env:
+          MONEYOS_EXECUTION_MODE: ${{ vars.MONEYOS_EXECUTION_MODE || 'dry_run' }}
+          MONEYOS_KILL_SWITCH: ${{ vars.MONEYOS_KILL_SWITCH || 'false' }}
+          PLAID_CLIENT_ID: ${{ secrets.PLAID_CLIENT_ID }}
+          PLAID_SECRET: ${{ secrets.PLAID_SECRET }}
+          PLAID_ACCESS_TOKENS: ${{ secrets.PLAID_ACCESS_TOKENS }}
+          PLAID_ENV: ${{ vars.PLAID_ENV || 'development' }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+          ALPACA_PAPER: ${{ vars.ALPACA_PAPER || 'true' }}
+          CRYPTO_EXCHANGE: ${{ vars.CRYPTO_EXCHANGE || 'coinbase' }}
+          CRYPTO_API_KEY: ${{ secrets.CRYPTO_API_KEY }}
+          CRYPTO_API_SECRET: ${{ secrets.CRYPTO_API_SECRET }}
+          CRYPTO_API_PASSPHRASE: ${{ secrets.CRYPTO_API_PASSPHRASE }}
+        run: python -m moneyos.cli run --incoming "${{ github.event.inputs.incoming || '0' }}"
+
+      - name: Upload private runtime artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: moneyos-runtime-${{ github.run_id }}
+          path: runtime/
+          retention-days: 7
+
+      - name: Comment summary on trigger issue
+        if: github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment "${{ github.event.issue.number }}" --body-file runtime/latest.md
+          gh issue close "${{ github.event.issue.number }}" --comment "MoneyOS run completed."

@@ -5,10 +5,13 @@ execution:
   kill_switch: false
   max_single_payment: 500.00
   max_daily_payments: 1500.00
+  max_single_collection: 5000.00
+  max_daily_collections: 10000.00
   max_single_trade: 100.00
   max_daily_trades: 250.00
   require_manual_approval_above: 100.00
   allow_live_payments: false
+  allow_live_collections: false
   allow_live_investing: false
   allow_live_speculation: false
 routing:

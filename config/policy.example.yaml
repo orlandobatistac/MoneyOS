@@ -1,0 +1,35 @@
+version: 1
+currency: USD
+execution:
+  mode: dry_run
+  kill_switch: false
+  max_single_payment: 500.00
+  max_daily_payments: 1500.00
+  max_single_trade: 100.00
+  max_daily_trades: 250.00
+  require_manual_approval_above: 100.00
+  allow_live_payments: false
+  allow_live_investing: false
+  allow_live_speculation: false
+routing:
+  minimum_cash_reserve: 1000.00
+  reserve_target: 3000.00
+  post_obligation_split:
+    reserve: 0.40
+    investing: 0.40
+    speculation: 0.05
+    flexible: 0.15
+investing:
+  symbols:
+    - symbol: VTI
+      weight: 0.70
+    - symbol: VXUS
+      weight: 0.20
+    - symbol: BND
+      weight: 0.10
+speculation:
+  max_portfolio_percent: 0.05
+  crypto_symbols:
+    - BTC/USD
+    - ETH/USD
+  leverage_allowed: false
